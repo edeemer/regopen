@@ -1,0 +1,47 @@
+Regopen is an alternative to the xdg-open resource opener configured
+with regular expressions.
+
+Description
+-----------
+
+The regopen utility opens file/URI/whatever in a way that is specified in
+configuration file.  A configuration file consists of a set of patterns
+in the form of regular expressions and associated actions in the form of
+shell script lines.
+
+Actions may be executed in the same process or in the child, if -c option
+is set.
+
+See manual page (regopen.1) for more information.
+
+Example Configuration File
+--------------------------
+
+# Put it in ~/.regopen
+
+https?://[^ ]*
+        firefox "$item" &
+
+.*\.gif
+.*\.jpe?g
+.*\.png
+	exec feh "$item"
+
+# Manual page
+[a-zA-Z0-9_-]+\([0-9]\)
+        manpage=`echo $item | sed 's/(.*//'`
+        section=`echo $item | sed 's/.*(//;s/)//'`
+        out="/tmp/$manpage.$section.pdf"
+        man -Tpdf $section $manpage >$out
+        exec regopen "$out"
+
+Building
+--------
+
+To build the utility run
+	
+	make
+
+to install run
+
+	make install
