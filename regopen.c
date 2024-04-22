@@ -18,6 +18,7 @@ int matches(char *item, char *regex);
 void parse(FILE *f, char *pattern, int child);
 void toshell(FILE *src, char *firstline, int spawnchild);
 void usage(void);
+void writeall(int fd, void *buf, size_t nbytes);
 void writecmds(FILE *src, int dest, char *firstline);
 
 #ifndef __OpenBSD__
@@ -200,21 +201,36 @@ print:
 }
 
 void
+writeall(int fd, void *buf, size_t nbytes)
+{
+	size_t off;
+	ssize_t nw;
+
+	for(off = 0; off < nbytes; off += nw) {
+		nw = write(fd, (char *)buf + off, nbytes - off);
+		if(nw == -1)
+			err(1, "write");
+		if(nw == 0)
+			errx(1, "write: nothing written");
+	}
+}
+
+void
 writecmds(FILE *src, int dest, char *firstline)
 {
 	char *line = NULL;
 	size_t linesize = 0;
 	size_t linelen;
 
-	write(dest, firstline, strlen(firstline));
-	write(dest, "\n", 1);
+	writeall(dest, firstline, strlen(firstline));
+	writeall(dest, "\n", 1);
 	for(;;) {
 		linelen = getline(&line, &linesize, src);
 		if(line[0] == '#')
 			continue;
 		if(linelen == -1 || line[0] != '\t')
 			break;
-		write(dest, line, linelen);
+		writeall(dest, line, linelen);
 	}
 	free(firstline);
 	free(line);
